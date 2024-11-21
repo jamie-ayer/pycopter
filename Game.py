@@ -68,6 +68,10 @@ class Game:
         
         self.copter = Copter()
         self.terrain = Terrain()
+        self.terrain2Flag = False
+        self.terrain2 = Terrain()
+        self.canvas.delete('terrain2T')
+        self.canvas.delete('terrain2B')
         self.gameoverflag = False
         
         self.game_loop()
@@ -83,26 +87,49 @@ class Game:
         self.canvas.create_rectangle(coordsT[0], coordsT[1], coordsT[0]+80, coordsT[2], fill='black', tags='terrainT')
         self.canvas.create_rectangle(coordsB[0], coordsB[1], coordsB[0]+80, self.terrain.coordBot, fill='black', tags='terrainB')
         
+        if self.terrain2Flag == True:
+            coordsT = self.terrain2.coordTop
+            coordsB = self.terrain2.coordsBot
+            
+            self.canvas.delete('terrain2T')
+            self.canvas.delete('terrain2B')
+            self.canvas.create_rectangle(coordsT[0], coordsT[1], coordsT[0]+80, coordsT[2], fill='black', tags='terrain2T')
+            self.canvas.create_rectangle(coordsB[0], coordsB[1], coordsB[0]+80, self.terrain2.coordBot, fill='black', tags='terrain2B')
+        
     #move terrain
     def move_terrain(self):
         
         self.terrain.move()
         
+        if self.terrain2Flag == True:
+            self.terrain2.move()
+        
     #collision checks
     def check_collisions(self):
         
+        #Floor/Ceiling collisions
+        if self.copter.coords[1] < 0 or self.copter.coords[1] > 800:
+            self.gameoverflag = True
+        
+        #Terrain 1 top
         if self.copter.coords[1] <= self.terrain.coordsTop[2]:
             if self.terrain.coordsTop[0] <= self.copter.coords[0]+20 <= (self.terrain.coordsTop[0]+80):
                     self.gameoverflag = True
-                    
+        #Terrain 1 Bot          
         if self.copter.coords[1]+20 >= self.terrain.coordBot:
             if self.terrain.coordsTop[0] <= self.copter.coords[0]+20 <= (self.terrain.coordsTop[0]+80):
                     self.gameoverflag = True
         
-        if self.copter.coords[1] < 0 or self.copter.coords[1] > 800:
-            self.gameoverflag = True
-        
-        
+        #Terrain 2 top
+        if self.terrain2Flag == True:
+            if self.copter.coords[1] <= self.terrain2.coordsTop[2]:
+                if self.terrain2.coordsTop[0] <= self.copter.coords[0]+20 <= (self.terrain2.coordsTop[0]+80):
+                    self.gameoverflag = True
+            #terrain 2 bot    
+            if self.copter.coords[1]+20 >= self.terrain2.coordBot:
+                if self.terrain2.coordsTop[0] <= self.copter.coords[0]+20 <= (self.terrain2.coordsTop[0]+80):
+                        self.gameoverflag = True
+      
     #deletes and redraws copter per cycle
     def draw_copter(self):
         
@@ -140,10 +167,23 @@ class Game:
         for t in range(1600):
             self.canvas.delete(f'B{t}')
     
+    #checks location of terrain for score, also spawns terrain 2 at correct time
     def check_score(self):
         
-        if self.terrain.coordsTop[0] < 0:
+        if self.terrain.coordsTop[0]+80 < 0:
             self.terrain = Terrain()
+            
+        if self.terrain2.coordsTop[0]+80 < 0:
+            self.terrain2 = Terrain()
+            
+        if self.terrain2Flag == False:
+            if self.terrain.coordsTop[0]+80 < 400:
+                print('Terrain2 FLAG')
+                self.terrain2Flag = True
+        
+        if self.terrain.coordsTop[0] == 140 or self.terrain2.coordsTop[0] == 140:
+            self.score += 1
+            self.score_for_label.set(f'Score: {self.score}')
         
     #functions called per game cycle
     def game_loop(self):
@@ -153,10 +193,10 @@ class Game:
                 self.pausefunc()
                 self.master.wait_variable(self.pause)
                 self.unpausefunc()
+            self.check_collisions()
             self.draw_terrain()
             self.draw_copter()
             self.movement()
-            self.check_collisions()
             self.check_score()
             self.move_terrain()
             #print(self.copter)

@@ -3,9 +3,10 @@ import random as r
 class Terrain:
     
     def __init__(self) -> None:
-        length = r.randint(200, 320)
+        length = r.randint(100, 500)
+        bot_length = (800 - (length + 140))
         self.coordsTop: list[int] = [800, 0, length]
-        self.coordsBot: list[int] = [800, 800, -length]
+        self.coordsBot: list[int] = [800, 800, -bot_length]
         
     @property
     def coordTop(self): return self.coordsTop
