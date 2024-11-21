@@ -1,6 +1,7 @@
 from tkinter import *
 import random as r
 from Copter import *
+from Terrain import *
 
 SQUARESIZE = 20
 
@@ -66,10 +67,41 @@ class Game:
         self.score_for_label.set(f'Score: {self.score}')
         
         self.copter = Copter()
+        self.terrain = Terrain()
         self.gameoverflag = False
-        self.direction = 'Down'
         
         self.game_loop()
+        
+    #deletes and redraws terrain per cycle
+    def draw_terrain(self):
+        
+        coordsT = self.terrain.coordTop
+        coordsB = self.terrain.coordsBot
+        
+        self.canvas.delete('terrainT')
+        self.canvas.delete('terrainB')
+        self.canvas.create_rectangle(coordsT[0], coordsT[1], coordsT[0]+80, coordsT[2], fill='black', tags='terrainT')
+        self.canvas.create_rectangle(coordsB[0], coordsB[1], coordsB[0]+80, self.terrain.coordBot, fill='black', tags='terrainB')
+        
+    #move terrain
+    def move_terrain(self):
+        
+        self.terrain.move()
+        
+    #collision checks
+    def check_collisions(self):
+        
+        if self.copter.coords[1] <= self.terrain.coordsTop[2]:
+            if self.terrain.coordsTop[0] <= self.copter.coords[0]+20 <= (self.terrain.coordsTop[0]+80):
+                    self.gameoverflag = True
+                    
+        if self.copter.coords[1]+20 >= self.terrain.coordBot:
+            if self.terrain.coordsTop[0] <= self.copter.coords[0]+20 <= (self.terrain.coordsTop[0]+80):
+                    self.gameoverflag = True
+        
+        if self.copter.coords[1] < 0 or self.copter.coords[1] > 800:
+            self.gameoverflag = True
+        
         
     #deletes and redraws copter per cycle
     def draw_copter(self):
@@ -82,7 +114,10 @@ class Game:
     
     #TODO add func
     def restart(self):
-        pass
+        
+        self.rBut.destroy()
+        self.canvas.delete('GOText')
+        self.game_setup()
     
     #Displays game over and restart button
     def game_over(self):
@@ -105,6 +140,11 @@ class Game:
         for t in range(1600):
             self.canvas.delete(f'B{t}')
     
+    def check_score(self):
+        
+        if self.terrain.coordsTop[0] < 0:
+            self.terrain = Terrain()
+        
     #functions called per game cycle
     def game_loop(self):
         
@@ -113,9 +153,12 @@ class Game:
                 self.pausefunc()
                 self.master.wait_variable(self.pause)
                 self.unpausefunc()
-                
+            self.draw_terrain()
             self.draw_copter()
             self.movement()
+            self.check_collisions()
+            self.check_score()
+            self.move_terrain()
             #print(self.copter)
         
             if self.gameoverflag == False:
