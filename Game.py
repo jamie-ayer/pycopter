@@ -2,6 +2,7 @@ from tkinter import *
 import random as r
 from Copter import *
 from Terrain import *
+from PIL import Image, ImageTk
 
 SQUARESIZE = 20
 
@@ -18,6 +19,13 @@ class Game:
         self.pause = StringVar()
         self.pause.set('0')
         self.master.bind('<Key>', self.bump)
+        
+        im: Image = Image.open('cop.png')
+        print(im.width, im.height)
+        im = im.resize((20, 20))
+        print(im.width, im.height)
+        self.cop_image = ImageTk.PhotoImage(image=im)
+        
         
         self.game_frame_init()
         self.game_setup()
@@ -65,6 +73,7 @@ class Game:
         
         self.score = 0
         self.score_for_label.set(f'Score: {self.score}')
+        
         
         self.copter = Copter()
         self.terrain = Terrain()
@@ -136,8 +145,11 @@ class Game:
         pixel = SQUARESIZE
         coords = self.copter.coord
         
-        self.canvas.delete('copter')
-        self.canvas.create_rectangle(coords[0], coords[1], coords[0]+pixel, coords[1]+pixel, fill='red', tags='copter')
+        self.canvas.delete('c')
+        #self.canvas.delete('copter')
+        
+        self.canvas.create_image(coords[0]+10, coords[1]+10, image=self.cop_image, tags='c')
+        #self.canvas.create_rectangle(coords[0], coords[1], coords[0]+pixel, coords[1]+pixel, fill='red', tags='copter')
     
     #TODO add func
     def restart(self):
